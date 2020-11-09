@@ -7,13 +7,14 @@
 '''
 
 import socket, sys, json
-from threading import Thread
 
 FLAGS = {
 	'show_errors':		False,
 	'timeout_limit':	0.5,
 	'not_empty':		False,
-	'default_port':		25565
+	'default_port':		25565,
+	'mods_info':		False,
+	'only_modded':		False
 }
 
 def scan(host, port=FLAGS['default_port']):
@@ -48,7 +49,7 @@ def scan(host, port=FLAGS['default_port']):
 	empty = 0
 	while recv:
 		try:
-			data = sock.recv(1024)
+			data = sock.recv(4096)
 			if len(data) > 0:
 				info += data
 				empty = 0
@@ -58,8 +59,14 @@ def scan(host, port=FLAGS['default_port']):
 
 	sock.close()
 
+	if len(info) == 0:
+		return None
+
 	try:
-		mc_data['data'] = json.loads(info[5:].decode('UTF-8'))
+		text = info.decode('UTF-8', 'ignore')
+		i = 0
+		while text[i] != '{': i += 1
+		mc_data['data'] = json.loads(text[i:])
 	except Exception as e:
 		mc_data['error'] = e
 		return mc_data
@@ -73,18 +80,52 @@ def show(data):
 	if data == None: return
 	if 'error' in data:
 		if FLAGS['show_errors']:
-			print('{:<24} {:<48}'.format(
+			print('{:<24}   {:<48}'.format(
 				'({}:{})'.format(data['addr']['host'], data['addr']['port']),
 				str(data['error'])[:48],
 			))
 		return
 	if FLAGS['not_empty'] and data['data']['players']['online'] == 0: return
-	print('{:<24} {:<48}ONLINE: {}/{}'.format(
+
+	info = { 'forged': ' ' }
+
+	if 'forgeData' in data['data']: info['forged'] = '*'
+
+	print('{:<24} {} {:<48}ONLINE: {}/{}'.format(
 		'({}:{})'.format(data['addr']['host'], data['addr']['port']),
+		info['forged'],
 		data['data']['version']['name'][:48],
 		data['data']['players']['online'],
-		data['data']['players']['max']
+		data['data']['players']['max'],
 	))
+
+	if FLAGS['mods_info'] and 'forgeData' in data['data']:
+		print('{:<22} CHANNELS'.format(' '))
+		for channel in data['data']['forgeData']['channels']:
+			req = ''
+			if channel['required']: req = '*'
+			print('{:<22} C > {:_<32} {:<16} {}'.format(
+				' ',
+				channel['res'][:32],
+				channel['version'],
+				req
+			))
+		print('{:<22} MODS'.format(' '))
+		for mod in data['data']['forgeData']['mods']:
+			print('{:<22} M > {:_<32} {:<16}'.format(
+				' ',
+				mod['modId'][:32],
+				mod['modmarker'][:32],
+			))
+
+	'''
+		forgeData
+			- channels
+			- mods
+	'''
+
+	#print(data['data']['forgeData'])
+	
 	return
 
 def treat_host(host):
@@ -125,6 +166,10 @@ def main():
 			FLAGS['show_errors'] = True
 		if sys.argv[i] == '--timeout-limit':
 			FLAGS['timeout_limit'] = float(sys.argv[i+1])
+		if sys.argv[i] == '--show-mods':
+			FLAGS['mods_info'] = True
+		if sys.argv[i] == '--only-modded':
+			FLAGS['only_modded'] = True
 	
 	for i in range(len(sys.argv)):
 		if sys.argv[i] == '-f':
