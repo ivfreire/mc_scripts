@@ -130,6 +130,11 @@ def main():
 		if sys.argv[i] == '-f':
 			hosts = read_file(sys.argv[i+1])
 			scan_hosts(hosts)
+		if sys.argv[i] == '-h':
+			FLAGS['show_errors'] = True
+			host = treat_host(sys.argv[i+1])
+			data = scan(host[0], host[1])
+			show(data)
 
 	return
 
