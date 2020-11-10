@@ -1,7 +1,9 @@
 '''
+	Created by Ícaro Freire in November 2020.
+	São Paulo, BR.
+
 	This script scan a given ip address for server information, like name
 	online players, version, description, favicon etc.
-	
 	OBS: I am afraid this script will only work out with cracked servers, since
 	communication between original servers and clients is encrypted.
 '''
@@ -143,7 +145,7 @@ def read_file(path):
 	hosts = []
 	with open(path, 'r') as file:
 		for line in file.readlines():
-			line = line.split('\n')[0]
+			line = line.replace('\n', '')
 			hosts.append(treat_host(line))
 	return hosts
 
