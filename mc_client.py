@@ -1,13 +1,20 @@
-import socket, sys
+import socket, sys, zlib
 from threading import Thread
 
+FLAGS ={
+	'addr':			('localhost', 25565),
+	'nickname':		'viniccius_13',
+	'version':		'1.16.4'
+}
+
 class MinecraftClient:
-	def __init__(self, nickname='Alice', version='1.16.4'):
+	def __init__(self, nickname='mc_client', version='1.16.4'):
 		self.nickname	= nickname
 		self.version	= version
 		self.sock 		= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.connected	= False
 		self.threads	= []
+		self.status		= None
 		print('Instanciated client {}.'.format(nickname))
 		return
 	
@@ -33,17 +40,23 @@ class MinecraftClient:
 		return
 
 	def join(self):
-		payload = b'\x10\x00\xf2\x05\tlocalhostc\xdd\x02\x0f\x00\rKayabaAkihita'
+		self.status = 1
+
+		payload = bytearray(b'\x10\x00\xf2\x03\tlocalhostc\xdd\x02')
+		payload += bytes([ len(self.nickname) + 2, 0, len(self.nickname) ])
+		payload += self.nickname.encode('UTF-8')
+
 		self.sock.send(payload)
 		print('Payload sent!')
 		self.connected = True
+
 		return
 
 	def recv(self, bufsize=1024):
 		while self.connected:
 			data = self.sock.recv(bufsize)
 			if len(data) > 0:
-				self.read(data)
+				self.parse(data)
 		return
 	
 	def send(self, data):
@@ -52,10 +65,18 @@ class MinecraftClient:
 			self.sock.send(data)
 		return
 
-	def read(self, data):
-		if data[0] > 0:
-			if data[1] == 3:
-				print(data)
+	def parse(self, data):
+		if len(data) > 0:
+			if self.status == 1: self.login_parse(data)
+		print(data)
+		return
+	
+	def login_parse(self, data):
+		if data[1] == 1:
+			self.connected = False
+			print('Disconnected!')
+		if data[1] == 3:
+			print(data)
 		return
 
 	def close(self):
@@ -64,50 +85,19 @@ class MinecraftClient:
 		self.sock.close()
 		return
 
+def main():
+	for i in range(len(sys.argv)):
+		if (sys.argv[i] == '-n') or (sys.argv[i] == '--nickname'):
+			FLAGS['nickname'] = sys.argv[i+1]
+		if (sys.argv[i] == '-v') or (sys.argv[i] == '--version'):
+			FLAGS['version'] = sys.argv[i+1]
+		if (sys.argv[i] == '-s') or (sys.argv[i] == '--server'):
+			FLAGS['addr'] = (sys.argv[i+1], 25565)
+	
+	client = MinecraftClient(nickname=FLAGS['nickname'], version='1.16.4')
+	client.connect(FLAGS['addr'])
+	client.close()
+	return
 
-
-addr = ('localhost', 25565)
-
-mc_client = MinecraftClient(nickname='KayabaAkihito')
-mc_client.connect(addr)
-
-
-mc_client.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''
-
-\x10		16	# Length
-\x00		0	# Length
-
-\xf2		242	# Version
-\x05		5	# Version
-
-\t			116	# ?
-
-localhostc		# HOST?
-\xdd\x02
-
-
-\x0f		15	# Length
-\x00		0	# Length
-
-\r			114	# ?
-KayabaAkihita	# Nickname
-
-'''
+if __name__ == '__main__':
+	main()
