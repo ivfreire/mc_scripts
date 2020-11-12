@@ -2,6 +2,12 @@ import socket
 import sys
 from threading import Thread
 
+flags = {
+	'nickname':			'wrapper',
+	'version':			'1.16.4',
+	'dynamic_version':	False
+}
+
 def parse_addr(addr):
 	if addr != '':
 		n_addr = addr.split(':') + [25565]
@@ -117,6 +123,9 @@ class MinecraftWrapper:
 				self.client.bind(self.addr)
 				self.client.listen()
 				self.client.accept()
+
+				if self.server == None:
+					raise BaseException('Please, first connect the MCWrapper to a server!').with_traceback(tb)
 
 				self.server.c_socket = self.client.client[0]
 				self.client.s_socket = self.server.sock
