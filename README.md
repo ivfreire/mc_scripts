@@ -6,6 +6,14 @@ Last but not least, I would like to make an appeal to you: use these tools with 
 
 OBS: Later I also plan to extend this README file :)
 
+## Dependencies
+
+These are the external Python dependencies for the scripts to work:
+
+```
+python-nmap
+```
+
 ## Contributors
 
 * **Ícaro Freire** - *Coder* - [ivfreire](https://github.com/ivfreire/)
