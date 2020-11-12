@@ -8,7 +8,7 @@ OBS: Later I also plan to extend this README file :)
 
 ## Contributors
 
-* ** Ícaro Freire ** - *Coder* - [ivfreire](https://github.com/ivfreire/)
+* **Ícaro Freire** - *Coder* - [ivfreire](https://github.com/ivfreire/)
 
 ## Acknowledgements
 
