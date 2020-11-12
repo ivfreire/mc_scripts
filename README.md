@@ -12,4 +12,4 @@ OBS: Later I also plan to extend this README file :)
 
 ## Acknowledgements
 
-* [wiki.vg](https://wiki.vg/Main_Page)
+* [wiki.vg](https://wiki.vg/Main_Page) - This wiki contains a lot of info about Minecraft
