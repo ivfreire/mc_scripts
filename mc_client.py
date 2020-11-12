@@ -8,7 +8,7 @@ FLAGS ={
 }
 
 class MinecraftClient:
-	def __init__(self, nickname=, version):
+	def __init__(self, nickname, version):
 		self.nickname	= nickname
 		self.version	= version
 		self.sock 		= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -42,7 +42,7 @@ class MinecraftClient:
 	def join(self):
 		self.status = 1
 
-		payload = bytearray(b'\x10\x00\xf2\x05\tlocalhostc\xdd\x02')
+		payload = bytearray(b'\x10\x00\xe0\x05\tlocalhostc\xdd\x02')
 		payload += bytes([ len(self.nickname) + 2, 0, len(self.nickname) ])
 		payload += self.nickname.encode('UTF-8')
 
