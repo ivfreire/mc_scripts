@@ -14,7 +14,7 @@ These are the external Python dependencies for the scripts to work:
 ```
 python-nmap
 ```
-They all can be installed using the `pip` command for yout version of Python:
+They all can be installed using the `pip` command for your version of Python:
 ```
 $ pip install python-nmap
 ```
