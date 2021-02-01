@@ -38,8 +38,6 @@ def main():
 			FLAGS['path'] = sys.argv[i+1]
 
 	FLAGS['host'] = sys.argv[1]
-	if len(sys.argv) > 2:
-		FLAGS['port'] = sys.argv[2]
 	ps = scan()
 	save(ps)
 	return

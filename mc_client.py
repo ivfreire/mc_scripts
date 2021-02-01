@@ -1,103 +1,54 @@
 import socket, sys, zlib
 from threading import Thread
 
-FLAGS ={
-	'addr':			('localhost', 25565),
-	'nickname':		'',
-	'version':		'1.16.4'
-}
-
 class MinecraftClient:
+
 	def __init__(self, nickname, version):
-		self.nickname	= nickname
-		self.version	= version
-		self.sock 		= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.connected	= False
-		self.threads	= []
-		self.status		= None
-		print('Instanciated client {}.'.format(nickname))
+		self.nickname = nickname
+		self.version = version
+		self.state = 0
 		return
 	
-	def connect(self, addr):
-		self.addr 		= addr
+	def connect(self, hostname, port):
+		print('Trying to connect to {}:{}...'.format(hostname, port))
+		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		
+		try:
+			self.sock.connect((hostname, port))
+			print('Connected!')
+		except Exception as e:
+			print('Exception at connecting: {}'.format(e))
+			return
 
-		print('Connecting to {}:{}...'.format(addr[0], addr[1]))
-		self.sock.connect(addr)
-		print('Connected!')
-
-		self.join()
-
-		self.threads.append(Thread(target=self.recv, args=[]))
-		for thread in self.threads: thread.start()
-
-		self.logic()
-
-		return
-	
-	def logic(self):
-		while self.connected:
-			if not self.connected: break
-		return
-
-	def join(self):
-		self.status = 1
-
-		payload = bytearray(b'\x10\x00\xe0\x05\tlocalhostc\xdd\x02')
-		payload += bytes([ len(self.nickname) + 2, 0, len(self.nickname) ])
-		payload += self.nickname.encode('UTF-8')
-
-		self.sock.send(payload)
-		print('Payload sent!')
-		self.connected = True
+		self.hostname = hostname
+		self.login()
 
 		return
 
-	def recv(self, bufsize=1024):
-		while self.connected:
-			data = self.sock.recv(bufsize)
-			if len(data) > 0:
-				self.parse(data)
-		return
-	
-	def send(self, data):
-		if self.connected:
-			data = str(data, encoding='UTF-8')
-			self.sock.send(data)
-		return
+	def login(self):
+		payload = bytearray(b'\x10\x00\xf2\x05\tlocalhost\x0b\xb8\x02')
+		payload += b'\x00'
 
-	def parse(self, data):
-		if len(data) > 0:
-			if self.status == 1: self.login_parse(data)
+		print(payload)
+
+		self.sock.send(b'\x10\x00\xf2\x05\tlocalhost\x0b\xb8\x02\x0f\x00\rKayabaAkihita')
+
+		data = self.sock.recv(1024)
 		print(data)
-		return
-	
-	def login_parse(self, data):
-		if data[1] == 1:
-			self.connected = False
-			print('Disconnected!')
-		if data[1] == 3:
-			print(data)
+
+		while True:
+			print('CU')
+
 		return
 
-	def close(self):
-		self.connected = False
-		for thread in self.threads: thread.join()
-		self.sock.close()
-		return
+mc_client = MinecraftClient('AncapDestroyer', '1.16.4')
+mc_client.connect('localhost', 25565)
 
-def main():
-	for i in range(len(sys.argv)):
-		if (sys.argv[i] == '-n') or (sys.argv[i] == '--nickname'):
-			FLAGS['nickname'] = sys.argv[i+1]
-		if (sys.argv[i] == '-v') or (sys.argv[i] == '--version'):
-			FLAGS['version'] = sys.argv[i+1]
-		if (sys.argv[i] == '-s') or (sys.argv[i] == '--server'):
-			FLAGS['addr'] = (sys.argv[i+1], 25565)
-	
-	client = MinecraftClient(nickname=FLAGS['nickname'], version='1.16.4')
-	client.connect(FLAGS['addr'])
-	client.close()
-	return
+'''
+	242	5
 
-if __name__ == '__main__':
-	main()
+	LENGTH	P_ID	CONTENT
+	\x10	\x00	\xf2\x05 \tlocalhost \x0b\xb8 \x02
+	\x0f	\x00	\rKayabaAkihito
+
+'''
