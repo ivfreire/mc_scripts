@@ -1,9 +1,24 @@
 import socket
 from threading import Thread
 import struct
+import zlib
+
+def read_varint(data):
+	count = 0
+	result = 0
+	read = 128
+	while read & 128 != 0:
+		read = data[count]
+		value = read & 127
+		result |= (value << (7 * count))
+		count += 1
+	return result, count
+
+def decompress():
+	return
 
 class Bot:
-	def __init__(self, nickname='BootyBot', version=None, online=False):
+	def __init__(self, nickname='BootyBot-alpha-1', version=None, online=False):
 		self.nickname = nickname
 		self.running = False
 		self.state = 0
@@ -39,32 +54,48 @@ class Bot:
 	def listen(self, sock):
 		print('Listening to the server.')
 		while (self.running):
-			packet = sock.recv(4098)
+			packet = sock.recv(2097151)
 			if packet != '':
-				self.handle_packets(packet)
 				self.log.write(f'{packet}\n')
+				self.handle_packets(packet)
 		return
 
 	def handle_packets(self, buff):
-		length, packet_id, data = buff[0], buff[1], buff[2:]
+		length, index = read_varint(buff[0:])
+		
+		if self.compression != None:
+			data_length, d = read_varint(buff[index:])
+			index += d
+			if data_length > 0:
+				buff = zlib.decompress(buff[index:], bufsize=self.compression)
+				length = data_length
+				index = 0
 
-		if self.state == 2:
+		packet_id, d = read_varint(buff[index:])
+		index += d
+		data = buff[index:]
+
+		if self.state == 2:	# Login state
 			if packet_id == 3: self.set_compression(length - 1, data)	# set compression size
-			if packet_id == 0: self.login_success(length - 1, data)		# login response from server
+			if packet_id == 2: self.login_success(length - 1, data)		# login response from server
+		if self.state == 3:
+			if packet_id == 36: print(data)
+			# print(packet_id)
+
+		# self.log_packet(length, packet_id, data)
 
 		return
 
 	def set_compression(self, length, data):
-		self.compression = struct.unpack('>H', data)
+		self.compression = read_varint(data)[0]
 		return
 	
 	def login_success(self, length, data):
+		self.uuid = data[1:17]
+		print('Logged in!')
 		self.state = 3
-
-		print(data)
-
 		return
-	
+
 	def disconnect(self, sock):
 		sock.close()
 		return
@@ -78,16 +109,18 @@ class Bot:
 
 	def login(self, sock):
 		print('Logging in...')
-
 		data = self.nickname.encode('ASCII')
 		data = struct.pack('B', len(self.nickname) + 2) + b'\x00' + struct.pack('B', len(self.nickname)) + data
-
 		sock.send(data)
 		return
+	
+	def log_packet(self, length, packet_id, data):
+		self.log.write('{} {} {}\n'.format(length, packet_id, data))
+		return
 
-bot = Bot(nickname='KayabaAkihito')
+
+bot = Bot()
 bot.run()
-
 
 '''
 
