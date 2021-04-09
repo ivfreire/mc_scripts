@@ -19,13 +19,18 @@ for line in sys.stdin:
 			data = data[5:].decode('ASCII', errors='ignore')
 			data = loads(data)
 
-			desc = data['description']['text']
+			modded = ' '
+			if 'modinfo' in data.keys(): modded = '*'
 
-			print('{:15}\t{:.<63}\t{:<.15}\t{:15}'.format(
+			desc = data['description']['text']
+			desc = desc.replace('\n', '')
+
+			print('{:15}\t{:.<63}\t{:<.15}\t{:15}\t{}'.format(
 				HOST,
 				desc,
 				'{}:{}'.format(data['version']['name'], data['version']['protocol']),
-				'{}/{}'.format(data['players']['online'], data['players']['max'])
+				'{}/{}'.format(data['players']['online'], data['players']['max']),
+				modded
 			))
 		
 		sock.close()
